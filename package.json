@@ -1,0 +1,21 @@
+{
+    "name": "social-network-api",
+    "version": "1.0.0",
+    "description": "API for a social network web application using Express.js, MongoDB, and Mongoose.",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js",
+      "dev": "nodemon server.js"
+    },
+    "author": "Diego Araujo",
+    "license": "ISC",
+    "dependencies": {
+      "express": "^4.17.1",
+      "mongoose": "^5.9.10",
+      "dotenv": "^8.2.0"
+    },
+    "devDependencies": {
+      "nodemon": "^2.0.2"
+    }
+  }
+  
