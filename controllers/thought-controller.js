@@ -72,18 +72,19 @@ const ThoughtManager = {
             .catch(error => response.status(400).json(error));
     },
     // Deletes a thought by its ID.
-    deleteThought({ params }, response) {
-        Thought.findByIdAndRemove(params.id)
-            .then(deletedThought => {
-                if (!deletedThought) {
-                    response.status(404).json({ message: 'Thought ID not found' }); // Thought not found handler.
-                    return;
-                }
-                // Response after successful deletion.
-                response.json({ message: 'Thought successfully deleted' });
-            })
-            .catch(error => response.status(400).json(error));
-    },
+deleteThought({ params }, response) {
+    Thought.findOneAndDelete({ _id: params.id })
+        .then(deletedThought => {
+            if (!deletedThought) {
+                response.status(404).json({ message: 'Thought ID not found' });
+                return;
+            }
+            // Optionally handle the deletion of the thought's reactions if necessary
+            response.json({ message: 'Thought successfully deleted' });
+        })
+        .catch(error => response.status(400).json(error));
+},
+
     // Removes a reaction from a thought.
     detachReaction({ params }, response) {
         Thought.findByIdAndUpdate(
