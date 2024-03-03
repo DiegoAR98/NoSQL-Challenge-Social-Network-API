@@ -1,104 +1,106 @@
+// Import the Thought and User models.
 const { Thought, User } = require('../models');
 
 const ThoughtManager = {
-    // Retrieve all thoughts from the database
+    // Fetches all thoughts from the database.
     fetchAllThoughts(request, response) {
         Thought.find({})
-            .populate('reactions', '-__v')
-            .select('-__v')
-            .then(thoughtData => response.json(thoughtData))
+            .populate('reactions', '-__v') // Populates the reactions field, excluding the version key.
+            .select('-__v') // Excludes the version key from the results.
+            .then(thoughtData => response.json(thoughtData)) // Sends the fetched data as JSON.
             .catch(error => {
                 console.error(error);
-                response.status(400).send();
+                response.status(400).send(); // Sends a 400 status code if an error occurs.
             });
     },
-    // Find a thought by its unique ID
+    // Finds a specific thought by its ID.
     findThoughtById({ params }, response) {
         Thought.findById(params.id)
             .populate('reactions', '-__v')
             .select('-__v')
             .then(thoughtData => {
                 if (!thoughtData) {
-                    response.status(404).json({ message: 'Thought not found' });
+                    response.status(404).json({ message: 'Thought not found' }); // Thought not found handler.
                     return;
                 }
-                response.json(thoughtData);
+                response.json(thoughtData); // Sends the found thought as JSON.
             })
             .catch(error => {
                 console.error(error);
                 response.status(400).send();
             });
     },
-    // Create a new thought and link it to a user
+    // Creates a new thought and associates it with a user.
     createThought({ params, body }, response) {
         Thought.create(body)
             .then(({ _id }) => User.findByIdAndUpdate(
                 params.userId,
-                { $addToSet: { thoughts: _id } },
+                { $addToSet: { thoughts: _id } }, // Adds the new thought's ID to the user's thoughts array.
                 { new: true }
             ))
-            .then(thoughtData => response.json(thoughtData))
+            .then(thoughtData => response.json(thoughtData)) // Sends the updated user data as JSON.
             .catch(error => response.status(400).json(error));
     },
-    // Update an existing thought by its ID
+    // Updates a thought by its ID.
     editThought({ params, body }, response) {
-        Thought.findByIdAndUpdate(params.id, body, { new: true, runValidators: true })
+        Thought.findByIdAndUpdate(params.id, body, { new: true, runValidators: true }) // Updates the thought and validates the new data.
             .then(thoughtData => {
                 if (!thoughtData) {
-                    response.status(404).json({ message: 'No matching thought found' });
+                    response.status(404).json({ message: 'No matching thought found' }); // Thought not found handler.
                     return;
                 }
-                response.json(thoughtData);
+                response.json(thoughtData); // Sends the updated thought as JSON.
             })
             .catch(error => response.status(400).json(error));
     },
-    // Add a reaction to a thought
+    // Appends a reaction to a thought.
     appendReaction({ params, body }, response) {
         Thought.findByIdAndUpdate(
             params.thoughtId,
-            { $push: { reactions: body } },
+            { $push: { reactions: body } }, // Adds a new reaction to the thought.
             { new: true, runValidators: true }
         )
         .populate('reactions', '-__v')
         .select('-__v')
             .then(thoughtData => {
                 if (!thoughtData) {
-                    response.status(404).json({ message: 'Thought ID not found' });
+                    response.status(404).json({ message: 'Thought ID not found' }); // Thought not found handler.
                     return;
                 }
-                response.json(thoughtData);
+                response.json(thoughtData); // Sends the updated thought as JSON.
             })
             .catch(error => response.status(400).json(error));
     },
-    // Remove a thought by its ID
+    // Deletes a thought by its ID.
     deleteThought({ params }, response) {
         Thought.findByIdAndRemove(params.id)
             .then(deletedThought => {
                 if (!deletedThought) {
-                    response.status(404).json({ message: 'Thought ID not found' });
+                    response.status(404).json({ message: 'Thought ID not found' }); // Thought not found handler.
                     return;
                 }
-                // Optionally, handle cleanup of any linked reactions or user references
+                // Response after successful deletion.
                 response.json({ message: 'Thought successfully deleted' });
             })
             .catch(error => response.status(400).json(error));
     },
-    // Remove a reaction from a thought
+    // Removes a reaction from a thought.
     detachReaction({ params }, response) {
         Thought.findByIdAndUpdate(
             params.thoughtId,
-            { $pull: { reactions: { _id: params.reactionId } } },
+            { $pull: { reactions: { _id: params.reactionId } } }, // Removes a specific reaction from the thought.
             { new: true }
         )
             .then(thoughtData => {
                 if (!thoughtData) {
-                    response.status(404).json({ message: 'No matching thought for reaction removal' });
+                    response.status(404).json({ message: 'No matching thought for reaction removal' }); // Thought not found handler.
                     return;
                 }
-                response.json(thoughtData);
+                response.json(thoughtData); // Sends the updated thought as JSON.
             })
             .catch(error => response.status(400).json(error));
     }
 };
 
+// Export the ThoughtManager for use elsewhere.
 module.exports = ThoughtManager;
